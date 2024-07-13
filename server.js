@@ -22,6 +22,7 @@ const addressRoute = require('./Routes/addressRoute')
 const CouponRoute = require('./Routes/CouponRoute')
 const cartRoute = require('./Routes/cartRoute')
 const orderRoute = require('./Routes/orderRoute')
+const{webhookCeckout} = require('./services/orderService')
 
 dbConnection()
 
@@ -31,6 +32,8 @@ app.use(cors())
 app.options('*', cors())
 
 app.use(compression())
+
+app.post('/webhook-checkout', express.raw({ type: 'application/json' }), webhookCeckout)
 
 app.use(express.json())
 
