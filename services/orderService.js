@@ -200,7 +200,7 @@ const createCardOrder = async (session) => {
                 update: { $inc: { quantity: -item.quantity, sold: +item.quantity } },
             },
         }));
-        await Product.bulkWrite(bulkOption, {});
+        await productModel.bulkWrite(bulkOption, {});
 
         // 5) Clear cart depend on cartId
         await cartModel.findByIdAndDelete(cartId);
