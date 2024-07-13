@@ -3,10 +3,14 @@ const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY)
 const asyncHandler = require('express-async-handler');
 const ApiError = require('../utils/apiError');
 const cartModel = require('../models/cartModel')
+const userModel = require('../models/userModel')
 const productModel = require('../models/productModel')
 const orderModel = require('../models/orderModel')
 const handlerFactory = require('./handlersFactory');
 const { model } = require('mongoose');
+
+
+//--------------------------------------------------  cash order --------------------------------------------------------
 
 
 exports.createCashOrder = asyncHandler(async (req, res, next) => {
@@ -118,6 +122,9 @@ exports.updateOrderToDelivered = asyncHandler(async (req, res, next) => {
 });
 
 
+//--------------------------------------------------  card order --------------------------------------------------------
+
+
 exports.checkOutSession = asyncHandler(async (req, res, next) => {
     // app settings
     const taxPrice = 0;
@@ -164,6 +171,43 @@ exports.checkOutSession = asyncHandler(async (req, res, next) => {
     res.status(200).json({ status: 'success', session })
 })
 
+
+
+const createCardOrder = async (session) => {
+    const cartId = session.client_reference_id;
+    const shippingAddress = session.metadata;
+    const oderPrice = session.amount_total / 100;
+
+    const cart = await cartModel.findById(cartId);
+    const user = await userModel.findOne({ email: session.customer_email });
+
+    // 3) Create order with default paymentMethodType card
+    const order = await orderModel.create({
+        user: user._id,
+        cartItems: cart.cartItems,
+        shippingAddress,
+        totalOrderPrice: oderPrice,
+        isPaid: true,
+        paidAt: Date.now(),
+        paymentMethodType: 'card',
+    });
+
+    // 4) After creating order, decrement product quantity, increment product sold
+    if (order) {
+        const bulkOption = cart.cartItems.map((item) => ({
+            updateOne: {
+                filter: { _id: item.product },
+                update: { $inc: { quantity: -item.quantity, sold: +item.quantity } },
+            },
+        }));
+        await Product.bulkWrite(bulkOption, {});
+
+        // 5) Clear cart depend on cartId
+        await cartModel.findByIdAndDelete(cartId);
+    }
+};
+
+
 exports.webhookCeckout = asyncHandler(async (req, res, next) => {
     const sig = req.headers['stripe-signature'];
 
@@ -180,12 +224,9 @@ exports.webhookCeckout = asyncHandler(async (req, res, next) => {
     }
     if (event.type === 'checkout.session.completed') {
         //  Create order
-        // createCardOrder(event.data.object);
-        console.log('creat y3m');
-    }
-    else {
-        console.log('done y alpy');
+        createCardOrder(event.data.object);
     }
 
-    // res.status(200).json({ received: true });
+
+    res.status(200).json({ received: true });
 })
