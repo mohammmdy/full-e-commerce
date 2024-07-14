@@ -9,6 +9,10 @@ const compression = require('compression')
 // // limit number requests in specific time  npm i express-rate-limit
 // const rateLimit = require('express-rate-limit')
 
+
+// redundant parameter in request sort sort   npm i hpp --save
+// const hpp = require('hpp')
+
 dotenv.config({ path: 'config.env' })
 const dbConnection = require('./config/database')
 const ApiError = require('./utils/apiError')
@@ -49,6 +53,11 @@ if (process.env.NODE_ENV == 'development') {
     app.use(morgan("dev"))
     console.log(`mode: ${process.env.NODE_ENV}`);
 }
+
+// // hpp parameter
+// app.use(hpp({ whitelist: ['price'] }))
+
+
 //---------------------------------------------------------------------------------
 // //rate limit 
 // const limiter = rateLimit({
