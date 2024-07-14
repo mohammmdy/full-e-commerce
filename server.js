@@ -13,6 +13,11 @@ const compression = require('compression')
 // redundant parameter in request sort sort   npm i hpp --save
 // const hpp = require('hpp')
 
+// // sanatize query  remove any mongo query from( body params query  header)   npm i express-mongo-sanitize   npm i xss-clean
+// const mongoSanatize = require('express-mongo-sanitize')
+// const xss = require('xss-clean')
+
+
 dotenv.config({ path: 'config.env' })
 const dbConnection = require('./config/database')
 const ApiError = require('./utils/apiError')
@@ -46,6 +51,12 @@ app.use(express.json())
 
 // //security limit request size  replace line 38 with it
 // app.use(express.json({ limit: '20kb' }))
+
+// // sanatize 
+// app.use(mongoSanatize())
+// app.use(xss())
+
+
 
 app.use(express.static(path.join(__dirname, 'uploads')))
 
