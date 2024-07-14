@@ -6,6 +6,9 @@ const morgan = require('morgan')
 const cors = require('cors')
 const compression = require('compression')
 
+// // limit number requests in specific time  npm i express-rate-limit
+// const rateLimit = require('express-rate-limit')
+
 dotenv.config({ path: 'config.env' })
 const dbConnection = require('./config/database')
 const ApiError = require('./utils/apiError')
@@ -22,7 +25,7 @@ const addressRoute = require('./Routes/addressRoute')
 const CouponRoute = require('./Routes/CouponRoute')
 const cartRoute = require('./Routes/cartRoute')
 const orderRoute = require('./Routes/orderRoute')
-const{webhookCeckout} = require('./services/orderService')
+const { webhookCeckout } = require('./services/orderService')
 
 dbConnection()
 
@@ -37,12 +40,28 @@ app.post('/webhook-checkout', express.raw({ type: 'application/json' }), webhook
 
 app.use(express.json())
 
+// //security limit request size  replace line 38 with it
+// app.use(express.json({ limit: '20kb' }))
+
 app.use(express.static(path.join(__dirname, 'uploads')))
 
 if (process.env.NODE_ENV == 'development') {
     app.use(morgan("dev"))
     console.log(`mode: ${process.env.NODE_ENV}`);
 }
+//---------------------------------------------------------------------------------
+// //rate limit 
+// const limiter = rateLimit({
+//     windowMs: 15 * 60 * 1000, // 15 minutes
+//     limit: 5, // Limit each IP to 100 requests per `window` (here, per 15 minutes).
+//     message:
+//         'to many accounts created from this api , please try again after two minute'
+// })
+
+// // Apply the rate limiting middleware to all requests.
+// app.use('/e-commerce', limiter)
+//----------------------------------------------------------------------------------------
+
 
 app.use('/e-commerce/category', categoryRoute)
 app.use('/e-commerce/subCategory', subCategoryRoute)
